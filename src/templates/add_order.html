@@ -8,12 +8,6 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
-<script>
-$(function() {
-  $('#customer').selectpicker('refresh');
-});
-</script>
-
   <style>
     body { background-color: #f8f9fa; }
     .invoice-box {
@@ -60,24 +54,6 @@ $(function() {
   {% endfor %}
 </select>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  const customerSelect = document.getElementById("customer");
-  new Choices(customerSelect, {
-    searchEnabled: true,
-    searchFloor: 1,          // minimum characters to search
-    fuseOptions: {
-      // match from the start of the string
-      includeScore: true,
-      threshold: 0.2,        // stricter matching
-      ignoreLocation: true,
-      keys: ['label']
-    },
-    shouldSort: false
-  });
-});
-
-</script>
         </div>
         <div class="col-md-1">
           <label for="customer" class="form-label">Προσθήκη</label>
@@ -174,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function() {
           <h5 class="modal-title" id="addCustomerModalLabel">Προσθήκη Νέου Πελάτη</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form method="POST" action="{{ url_for('add_order_customers') }}">
+        <form id="addCustomerForm" method="POST" action="{{ url_for('add_order_customers') }}">
           <div class="modal-body">
             <div class="mb-3">
               <label for="name" class="form-label">Επωνυμία</label>
@@ -206,6 +182,51 @@ document.addEventListener("DOMContentLoaded", function() {
             <button type="submit" class="btn btn-success">Save Customer</button>
           </div>
         </form>
+
+        <script>
+              document.addEventListener("DOMContentLoaded", function() {
+                const customerSelect = document.getElementById("customer");
+                const customerChoices = new Choices(customerSelect, {
+                  searchEnabled: true,
+                  searchFloor: 1,
+                  shouldSort: false
+                });
+
+                // Handle modal form submission via AJAX
+                const addCustomerForm = document.getElementById("addCustomerForm");
+                addCustomerForm.addEventListener("submit", async function (e) {
+                  e.preventDefault();
+                  const formData = new FormData(addCustomerForm);
+
+                  const response = await fetch(addCustomerForm.action, {
+                    method: "POST",
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    body: formData
+                  });
+
+                  if (response.ok) {
+                    const data = await response.json();
+
+                    // Add new customer dynamically to Choices
+                    customerChoices.setChoices([{
+                        value: data.id,
+                        label: `${data.name} | ${data.phone1|| ''} | ${data.afm || ''}`,
+                        selected: true
+                    }], 'value', 'label', true);
+
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addCustomerModal'));
+                    modal.hide();
+
+                    // Reset form
+                    addCustomerForm.reset();
+                  } else {
+                    alert("Something went wrong adding the customer!");
+                  }
+                });
+              });
+              </script>
+
       </div>
     </div>
   </div>

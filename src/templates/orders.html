@@ -115,8 +115,8 @@
               <td>{{ order[1] }}</td>
               <td>{{ order[2] }}</td>
               <td>{% if order[5]==0 %}{{ order[3] }} {% else %} <p style="color: red"> <del>{{order[3]}}</del></p>{{order[5] }}{% endif %}</td>
-              <td>{{ order[6] }}</td>
-              <td><input class="form-check-input is-ordered-checkbox" type="checkbox" {% if order[6]==1 %} checked {% endif %}></td>
+              <td>{% if order[5]==0 %}{{ order[4] }} {% else %} {{order[5] - order[6]}}{% endif %}</td>
+              <td><input class="form-check-input is-ordered-checkbox" disabled type="checkbox" {% if order[7]==1 %} checked {% endif %}></td>
            
               <td>
                 <!-- edit button -->

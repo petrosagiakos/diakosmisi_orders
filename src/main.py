@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, url_for, session, send_from_directory
+from flask import Flask, render_template, redirect, request, url_for, session, send_from_directory, jsonify
 from flask_session import Session
 import psycopg2
 import db
@@ -105,7 +105,8 @@ def orders():
         c.name,
         COALESCE(SUM(r.quantity * r.value), 0) AS total_value,
         COALESCE(SUM(r.quantity * r.value), 0) - o.paid AS balance,
-        after_sale
+        after_sale,
+        o.paid
     FROM Orders o
     JOIN Customers c ON o.cust_id = c.id
     LEFT JOIN OrderRows r ON o.id = r.order_id
@@ -197,9 +198,30 @@ def add_orders():
 @app.route("/add_order/add",methods=["GET", "POST"])
 def add_order_customers():
     if request.method == "POST":
-        add_customer()
+        conn = db.connect_db()
+        cur = conn.cursor()
 
-        # Redirect to customers list after adding
+        name = request.form.get("name")
+        email = request.form.get("email")
+        phone1 = request.form.get("phone1")
+        phone2 = request.form.get("phone2")
+        address = request.form.get("address")
+        afm = request.form.get("afm")
+
+        cur.execute(
+            "INSERT INTO Customers (name, email, phone1, phone2, address, afm) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+            (name, email, phone1, phone2, address, afm)
+        )
+        new_id = cur.fetchone()[0]
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        # If it's an AJAX call, return JSON instead of redirect
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"id": new_id, "name": name, "phone1": phone1, "email": email, "afm":afm})
+
+        # Normal redirect (fallback)
         return redirect(url_for("add_orders"))
 @app.route("/edit_order/<int:id>", methods=["GET","POST"])
 def edit_order(id):
