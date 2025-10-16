@@ -103,8 +103,9 @@
     <th data-column="0" class="sortable">Κωδικός <i class="bi bi-arrow-down-up"></i></th>
     <th data-column="1" class="sortable">Ημερομηνία <i class="bi bi-arrow-down-up"></i></th>
     <th data-column="2" class="sortable">Όνομα Πελάτη <i class="bi bi-arrow-down-up"></i></th>
-    <th data-column="3" class="sortable">Συνολικό Ποσό <i class="bi bi-arrow-down-up"></i></th>
+    <th data-column="3" class="sortable">Σύνολο Μετά Έκπτωσης <i class="bi bi-arrow-down-up"></i></th>
     <th data-column="4" class="sortable">Υπόλοιπο <i class="bi bi-arrow-down-up"></i></th>
+    <th data-column="4" class="sortable">Έχει Παραγγελθεί <i class="bi bi-arrow-down-up"></i></th>
   </tr>
 </thead>
           <tbody>
@@ -113,9 +114,9 @@
               <td>{{ order[0] }}</td>
               <td>{{ order[1] }}</td>
               <td>{{ order[2] }}</td>
-              <td>{{ order[3] }}</td>
-              <td>{{ order[4] }}</td>
-              <td>{{ order[5] }}</td>
+              <td>{% if order[5]==0 %}{{ order[3] }} {% else %} <p style="color: red"> <del>{{order[3]}}</del></p>{{order[5] }}{% endif %}</td>
+              <td>{{ order[6] }}</td>
+              <td><input class="form-check-input is-ordered-checkbox" type="checkbox" {% if order[6]==1 %} checked {% endif %}></td>
            
               <td>
                 <!-- edit button -->

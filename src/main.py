@@ -104,7 +104,8 @@ def orders():
         o.dt,
         c.name,
         COALESCE(SUM(r.quantity * r.value), 0) AS total_value,
-        COALESCE(SUM(r.quantity * r.value), 0) - o.paid AS balance
+        COALESCE(SUM(r.quantity * r.value), 0) - o.paid AS balance,
+        after_sale
     FROM Orders o
     JOIN Customers c ON o.cust_id = c.id
     LEFT JOIN OrderRows r ON o.id = r.order_id
@@ -125,9 +126,27 @@ def orders():
     query+=gb
     cur.execute(query)
     orders = cur.fetchall()
+    cur.execute("SELECT order_id, is_ordered ,id FROM Orderrows")
+    order_rows=cur.fetchall()
+    ordered_list=dict()
+    
+    for o in orders:
+        ordered_list[o[0]]=1 #initializing the dictionary
+    for r in order_rows:
+        if r[1]==0:
+            ordered_list[r[0]]=0
+    
+    row_ord=[]
+    for x in ordered_list:
+        row_ord.append(ordered_list[x])
+    final_orders=[]
+    for o in range(len(orders)):
+        temp=list(orders[o])
+        temp.append(row_ord[o])
+        final_orders.append(tuple(temp))
     cur.close()
     conn.close()
-    return render_template("orders.html", orders=orders)
+    return render_template("orders.html", orders=final_orders)
 
 @app.route("/add_order",methods=["GET", "POST"])
 def add_orders():
@@ -143,10 +162,13 @@ def add_orders():
         
         if not paid:
             paid=0
+        afterSales=request.form.get("afterSales")
+        if not afterSales:
+            afterSales=0
         visa_cash = request.form.get("visa_cash")
 
-        cur.execute("INSERT INTO orders (dt, paid, visa_cash, notes, cust_id) VALUES (%s, %s, %s, %s, %s) RETURNING id",
-            (date,paid,visa_cash,notes,cid))
+        cur.execute("INSERT INTO orders (dt, paid, visa_cash, notes, cust_id, after_sale) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+            (date,paid,visa_cash,notes,cid,afterSales))
         order_id = cur.fetchone()[0] 
         descr_list = request.form.getlist("descr[]")
         qty_list = request.form.getlist("qty[]")
@@ -157,7 +179,7 @@ def add_orders():
             if descr:
                 cur.execute(
                     "INSERT INTO OrderRows (descr, quantity, is_ordered, value, order_id) VALUES (%s, %s, %s,%s, %s)",
-                    (descr, int(qty), int(io), int(value), order_id)
+                    (descr, float(qty), int(io), float(value), order_id)
                 )
         conn.commit()
         cur.close()
@@ -191,10 +213,13 @@ def edit_order(id):
         paid = request.form.get("paid")
         if not paid:
             paid=0
+        afterSales=request.form.get("afterSales")
+        if not afterSales:
+            afterSales=0
         visa_cash = request.form.get("visa_cash")
 
-        cur.execute("UPDATE orders SET dt=%s, paid=%s, visa_cash=%s, notes=%s, cust_id=%s WHERE id=%s RETURNING id",
-            (date,paid,visa_cash,notes,cid,id))
+        cur.execute("UPDATE orders SET dt=%s, paid=%s, visa_cash=%s, notes=%s, cust_id=%s, after_sale=%s WHERE id=%s RETURNING id",
+            (date,paid,visa_cash,notes,cid,afterSales,id))
         order_id = cur.fetchone()[0] 
         row_ids = request.form.getlist("row_id[]")
         descr_list = request.form.getlist("descr[]")
@@ -268,7 +293,7 @@ def print_order(id):
     customer = cur.fetchone()
     cur.execute("SELECT * FROM OrderRows WHERE order_id=%s", (id,))
     rows = cur.fetchall()
-    total = sum(r[1] * r[3] for r in rows)
+    total = sum(r[1] * r[4] for r in rows)
     balance = total - order[3]
     cur.close()
     conn.close()

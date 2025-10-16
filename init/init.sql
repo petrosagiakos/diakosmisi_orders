@@ -14,6 +14,7 @@ CREATE TABLE orders(
     paid REAL,
     visa_cash INT,
     cust_id INT NOT NULL,
+    after_sale REAL,
     CONSTRAINT customer FOREIGN KEY (cust_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 CREATE TABLE OrderRows(

@@ -137,8 +137,8 @@
           <tr>
             <td class="text-center">{{ row[2] }}</td>
             <td>{{ row[1] }}</td>
-            <td>{{ row[3] }}</td>
-            <td>{{ row[1] * row[3] }}</td>
+            <td>{{ row[4] }}</td>
+            <td>{{ row[1] * row[4] }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -155,8 +155,9 @@
         <p><strong>Παρατηρήσεις:</strong> {{ order[1] }}</p>
         <hr>
         <p><strong>Πληρωμένο Ποσό:</strong> {{ order[3] }} €</p>
-        <p><strong>Σύνολο:</strong> {{ total }} €</p>
-        <p class="fw-bold text-danger"><strong>Υπόλοιπο:</strong> {{ balance }} €</p>
+        <p><strong>Σύνολο:</strong> {% if order[6]==0 %}{{ total }} {% else %} <p style="color :red"><del>{{total}} €</del></p>{{order[6]}}{%endif%} €</p>
+        
+        <p class="fw-bold text-danger"><strong>Υπόλοιπο:</strong> {% if order[6]==0 %}{{ balance }} {% else %} {{order[6]-order[3]}}{%endif%}  €</p>
       </div>
 
       <!-- Print button -->

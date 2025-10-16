@@ -146,6 +146,10 @@ document.addEventListener("DOMContentLoaded", function() {
             <label class="form-label">Σύνολο</label>
             <h4 id="grandTotal">0.00 €</h4>
           </div>
+         <div class="mb-3">
+            <label for="paid" class="form-label">Αξία Μετά Εκπτώσεων</label>
+            <input type="number" class="form-control" id="afterSales" name="afterSales" step="0.01">
+          </div>
           <div class="mb-3">
             <label class="form-label">Υπόλοιπο</label>
             <h4 id="amountLeft">0.00 €</h4>
@@ -242,36 +246,55 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  function updateTotals() {
-    let grandTotal = 0;
-    document.querySelectorAll('#orderRowsTable tbody tr').forEach(row => {
-      const qty = parseFloat(row.querySelector('.qty').value) || 0;
-      const price = parseFloat(row.querySelector('.price').value) || 0;
-      const lineTotal = qty * price;
-      row.querySelector('.line-total').textContent = lineTotal.toFixed(2);
-      grandTotal += lineTotal;
-    });
-    const paidInput=document.getElementById('paid')
-    document.getElementById('grandTotal').textContent = grandTotal.toFixed(2) + ' €';
-    if(paid!== null){
-        const paid = parseFloat(paidInput.value) || 0;
-      document.getElementById('amountLeft').textContent = (grandTotal-paid).toFixed(2) + ' €';
-    }
+ function updateTotals() {
+  let grandTotal = 0;
+
+  document.querySelectorAll('#orderRowsTable tbody tr').forEach(row => {
+    const qty = parseFloat(row.querySelector('.qty')?.value) || 0;
+    const price = parseFloat(row.querySelector('.price')?.value) || 0;
+    const lineTotal = qty * price;
+    const lineTotalCell = row.querySelector('.line-total');
+    if (lineTotalCell) lineTotalCell.textContent = lineTotal.toFixed(2);
+    grandTotal += lineTotal;
+  });
+
+  // Update grand total display
+  document.getElementById('grandTotal').textContent = grandTotal.toFixed(2) + ' €';
+
+  // Inputs
+  const paidInput = document.getElementById('paid');
+  const afterSalesInput = document.getElementById('afterSales');
+  const amountLeftDisplay = document.getElementById('amountLeft');
+
+  if (!amountLeftDisplay) return;
+
+  const paid = parseFloat(paidInput?.value) || 0;
+  const afterSales = parseFloat(afterSalesInput?.value);
+
+  // Determine which total to use for remaining amount
+  const baseTotal = !isNaN(afterSales) && afterSales > 0 ? afterSales : grandTotal;
+  const amountLeft = baseTotal - paid;
+  if(!isNaN(afterSales) && afterSales > 0 ){
+    document.getElementById('grandTotal').style.color="red";
+    document.getElementById('grandTotal').style.textDecoration = "line-through";
   }
-  document.addEventListener('DOMContentLoaded', () => {
-  // Run once on page load
+  amountLeftDisplay.textContent = amountLeft.toFixed(2) + ' €';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Initial run
   updateTotals();
 
-  // Attach listeners to qty and price inputs
+  // Add listeners
   document.querySelectorAll('.qty, .price').forEach(input => {
     input.addEventListener('input', updateTotals);
   });
 
-  // Attach listener to paid input
   const paidInput = document.getElementById('paid');
-  if (paidInput) {
-    paidInput.addEventListener('input', updateTotals);
-  }
+  if (paidInput) paidInput.addEventListener('input', updateTotals);
+
+  const afterSalesInput = document.getElementById('afterSales');
+  if (afterSalesInput) afterSalesInput.addEventListener('input', updateTotals);
 });
 document.querySelector('#orderRowsTable').addEventListener('change', function(e) {
   if (e.target.matches('.is-ordered-checkbox')) {
