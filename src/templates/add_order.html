@@ -42,6 +42,13 @@
           <label for="date" class="form-label">Ημερομηνία</label>
           <input type="date" class="form-control" id="date" name="date" value="{{ current_date }}">
         </div>
+
+        <script>
+          // Get today's date in YYYY-MM-DD format
+          const today = new Date().toISOString().split('T')[0];
+          // Set the value of the input field
+          document.getElementById('date').value = today;
+        </script>
         <div class="col-md-7">
           <label for="customer" class="form-label">Πελάτης</label>
           
